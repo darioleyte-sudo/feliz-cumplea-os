@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños, Vane!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Caveat:wght=700&family=Quicksand:wght=500;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #121212; /* Empieza en oscuro para el show inicial */
+            font-family: 'Quicksand', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px 0;
+            transition: background-image 2s ease, background-color 2s ease;
+        }
+
+        /* Enlace directo en la nube optimizado para que el fondo cargue siempre */
+        body.tulip-garden {
+            background-color: #ffe6eb;
+            background-image: url('https://images.unsplash.com/photo-1520763185298-1b434c919102?q=80&w=1600&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        /* Lienzo de fuegos artificiales ocupa toda la pantalla */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Estructura principal con columnas laterales y tarjeta al centro */
+        .main-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            z-index: 2;
+            width: 100%;
+            max-width: 1400px;
+            padding: 0 20px;
+        }
+
+        /* Columnas para organizar los GIFs en cascada */
+        .gif-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        /* Contenedor de la Tarjeta (Oculto al inicio) */
+        .card-container {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            background: #fffdf9;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), 0 12px 35px rgba(224, 140, 160, 0.25);
+            padding: 25px;
+            text-align: center;
+            border: 4px solid #ffb3c6;
+            background-image: radial-gradient(#f1eedb 10%, transparent 11%);
+            background-size: 20px 20px;
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            transition: opacity 1.5s ease, transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            flex-shrink: 0;
+        }
+
+        /* Clase activa para mostrar la tarjeta y elementos al finalizar la pirotecnia inicial */
+        .card-container.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        /* GIFs Laterales personalizados */
+        .side-gif {
+            width: 130px;
+            height: auto;
+            border-radius: 12px;
+            filter: drop-shadow(4px 6px 12px rgba(0, 0, 0, 0.3));
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        /* Tiempos de flotación alternados para dar dinamismo */
+        .gif-column:nth-child(odd) .side-gif { animation: floatGif1 4.5s ease-in-out infinite; }
+        .gif-column:nth-child(even) .side-gif { animation: floatGif2 5.5s ease-in-out infinite; }
+
+        .side-gif.show-gif {
+            opacity: 1;
+        }
+
+        /* Ocultar los laterales en pantallas medianas y pequeñas */
+        @media (max-width: 1050px) {
+            .gif-column {
+                display: none;
+            }
+            .main-layout {
+                justify-content: center;
+            }
+        }
+
+        @keyframes floatGif1 {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes floatGif2 {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Stickers Decorativos internos de la tarjeta */
+        .sticker {
+            position: absolute;
+            font-size: 2rem;
+            filter: drop-shadow(2px 2px 0px #ffb3c6);
+            animation: float 4s ease-in-out infinite;
+            z-index: 3;
+        }
+        .s1 { top: -15px; left: -10px; animation-delay: 0s; }
+        .s2 { top: -20px; right: -10px; animation-delay: 1s; }
+        .s3 { bottom: -15px; left: -5px; animation-delay: 1.5s; }
+        .s4 { bottom: -15px; right: -5px; animation-delay: 0.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(6deg); }
+        }
+
+        /* Mini Reproductor Estilo Spotify */
+        .spotify-player {
+            background-color: #121212;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            border: 1px solid #282828;
+        }
+
+        .album-art {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #ff8fa3, #ff4f76);
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            margin-right: 14px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+
+        .track-info {
+            flex-grow: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            margin-right: 10px;
+        }
+
+        .track-title {
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .track-artist {
+            color: #b3b3b3;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .heart-icon {
+            color: #1db954;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .play-btn {
+            width: 34px;
+            height: 34px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s ease;
+            padding-left: 2px;
+        }
+
+        .play-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: #121212;
+        }
+
+        /* Título de letras recortadas animadas */
+        .title-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 18px;
+            min-height: 45px;
+        }
+
+        .letter {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.8rem;
+            padding: 4px 10px;
+            border-radius: 8px;
+            color: white;
+            text-transform: uppercase;
+            box-shadow: 2px 3px 0px rgba(0,0,0,0.1);
+            transform: rotate(-10deg) scale(0);
+        }
+
+        .letter.pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            to { transform: scale(1) rotate(calc(-4deg + var(--r, 0deg))); }
+        }
+
+        .letter:nth-child(odd) { background-color: #ff8fa3; --r: 6deg; }
+        .letter:nth-child(even) { background-color: #ffb3c6; --r: -5deg; }
+        .letter:nth-child(3n) { background-color: #ffcad4; --r: 3deg; }
+        .letter:nth-child(4n) { background-color: #b5e2fa; --r: -4deg; }
+
+        /* Estilo del Bloque de Texto */
+        .message-box {
+            background: #fff;
+            border-left: 5px solid #ff8fa3;
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.01);
+            margin-bottom: 22px;
+            text-align: left;
+        }
+
+        .message-box p {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 500;
+            font-size: 1.05rem;
+            color: #3d3d3d;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .message-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Botón Sorpresa de Fuegos Artificiales Extras */
+        .btn-magic {
+            background-color: #ff6b8b;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: bold;
+            font-size: 1.05rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 107, 139, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-magic:hover {
+            background-color: #ff4f76;
+            transform: scale(1.04);
+        }
+
+        /* Capa superpuesta con tu fondo de Pinterest enlazado */
+        #introOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('https://i.pinimg.com/originals/ce/7b/83/ce7b831adc80df77f5195ecdb117b509.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            padding: 20px;
+        }
+
+        /* Contenedor interno ordenado */
+        .intro-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        /* Estilo para el Ramo de Lirios Gigante */
+        .lilies-bouquet {
+            font-size: 12rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0px 12px 25px rgba(0,0,0,0.65));
+            animation: floatLilies 4s ease-in-out infinite;
+        }
+
+        @keyframes floatLilies {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(3deg); }
+        }
+
+        #introOverlay h2 {
+            font-family: 'Fredoka One', cursive;
+            margin-bottom: 12px;
+            color: #ff8fa3;
+            font-size: 1.6rem;
+            padding: 0 10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        #introOverlay p {
+            font-size: 0.95rem;
+            color: #e0e0e0;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Capa de entrada con el ramo gigante -->
+    <div id="introOverlay">
+        <div class="intro-content">
+            <div class="lilies-bouquet">💐</div>
+            <h2>✨ Una sorpresa para Vane ✨</h2>
+            <p>Haz clic en cualquier parte para iniciar la magia...</p>
+        </div>
+    </div>
+
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- Layout de pantalla dividida en columnas -->
+    <div class="main-layout">
+        
+        <!-- BLOQUE DE GIFS IZQUIERDO -->
+        <div class="gif-column">
+            <img class="side-gif" id="g1" src="https://media.giphy.com/media/4byIIzePnEG1kkLu36/giphy.gif" alt="Cute stitch">
+            <img class="side-gif" id="g2" src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdzJheDhqc2toZzhhNWNvYjJqNDU3cW9yOXpxNDd5eXA5MGdxMzk5cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/gicO76ryvLGTKnVBAQ/giphy.gif" alt="Sanrio cake">
+            <img class="side-gif" id="g3" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTRpYWJiMnNobmh1NmI3b2o1eHVkbG56aWxieXd6Z2loYWs1a3c5cSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/8rfJJo1Orr3TANetsU/giphy.gif" alt="Pompompurin dance">
+        </div>
+
+        <!-- TARJETA CENTRAL -->
+        <div class="card-container" id="birthdayCard">
+            <div class="sticker s1">🎉</div>
+            <div class="sticker s2">✨</div>
+            <div class="sticker s3">🎈</div>
+            <div class="sticker s4">🎁</div>
+
+            <!-- Sección Spotify -->
+            <div class="spotify-player">
+                <div class="album-art">🎂</div>
+                <div class="track-info">
+                    <div class="track-title">Happy Birthday To You</div>
+                    <div class="track-artist">Feliz Cumpleaños Vane • Single</div>
+                </div>
+                <div class="player-controls">
+                    <span class="heart-icon">💚</span>
+                    <button class="play-btn" id="playBtn" title="Reproducir música">
+                        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Título -->
+            <div class="title-container" id="titleContainer"></div>
+
+            <!-- Mensaje -->
+            <div class="message-box">
+                <p><strong>¡Feliz cumpleaños, Vane! 🎉🎂</strong></p>
+                <p>Hoy quiero desearte un día lleno de momentos bonitos, sonrisas, tranquilidad y mucho cariño de todas las personas que te quieren. Espero que puedas disfrutar cada instante y que este nuevo año de vida te traiga salud, felicidad, muchos logros y experiencias que te hagan sentir orgullosa de ti misma.</p>
+                <p>Gracias por ser una persona tan especial. Deseo que todos tus sueños y metas poco a poco se vayan cumpliendo, y que nunca te falten motivos para sonreír. Mereces cosas muy bonitas porque tienes un gran corazón.</p>
+                <p>Que pases un cumpleaños increíble y que este nuevo año esté lleno de bendiciones, alegrías y momentos inolvidables. ¡Disfruta mucho tu día, Vane! 🥳🎈🎁</p>
+            </div>
+
+            <button class="btn-magic" id="magicBtn">¡Más fuegos artificiales! ➔</button>
+        </div>
+
+        <!-- BLOQUE DE GIFS DERECHO -->
+        <div class="gif-column">
+            <img class="side-gif" id="g4" src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3a3hpaGtzdDE0dDRvaW1waTVocG16MjNicHN1MmZrY2R0MmhvZGhlciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/TSpM3iivfaVfH5zjAC/giphy.gif" alt="Kuromi party">
+            <img class="side-gif" id="g5" src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YnljaGxwdXZzNG9vcWZnbGExaTNtaHRqdHE5MnFxaWgxa3FrMTI3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/No7xvTI73z1dJve0zJ/giphy.gif" alt="My melody birthday">
+            <img class="side-gif" id="g6" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmc5c2VjOWFrNWM3bjN6enlxMTI3bng0Z3d3MHg0bzV6djAyMGxybSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4byIIzePnEG1kkLu36/giphy.gif" alt="Cute stitch backup">
+        </div>
+
+    </div>
+
+    <script>
+        const playBtn = document.getElementById('playBtn');
+        const playIcon = document.getElementById('playIcon');
+        const titleContainer = document.getElementById('titleContainer');
+        const magicBtn = document.getElementById('magicBtn');
+        const card = document.getElementById('birthdayCard');
+        const sideGifs = document.querySelectorAll('.side-gif');
+        const introOverlay = document.getElementById('introOverlay');
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let isPlaying = false;
+        let audioCtx = null;
+        let melodyTimeout = null;
+        let particles = [];
+        let textParticles = [];
+        let animationStage = "intro"; // intro, textShow, mainCard
+
+        // Notas musicales y Melodía
+        const C4 = 261.63, D4 = 293.66, E4 = 329.63, F4 = 349.23, G4 = 392.00, A4 = 440.00, B4 = 493.88, C5 = 523.25, Bb4 = 466.16;
+        const birthdayMelody = [
+            {f: C4, d: 0.5}, {f: C4, d: 0.5}, {f: D4, d: 1}, {f: C4, d: 1}, {f: F4, d: 1}, {f: E4, d: 2},
+            {f: C4, d: 0.5}, {f: C4, d: 0.5}, {f: D4, d: 1}, {f: C4, d: 1}, {f: G4, d: 1}, {f: F4, d: 2},
+            {f: C4, d: 0.5}, {f: C4, d: 0.5}, {f: C5, d: 1}, {f: A4, d: 1}, {f: F4, d: 1}, {f: E4, d: 1}, {f: D4, d: 2},
+            {f: Bb4, d: 0.5}, {f: Bb4, d: 0.5}, {f: A4, d: 1}, {f: F4, d: 1}, {f: G4, d: 1}, {f: F4, d: 2}
+        ];
+        let currentNoteIndex = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playNote(frequency, duration, startTime) {
+            if (!isPlaying) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(0.15, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration - 0.05);
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        function playMelodyLoop() {
+            if (!isPlaying) return;
+            const note = birthdayMelody[currentNoteIndex];
+            const duration = note.d * 0.4;
+            playNote(note.f, duration, audioCtx.currentTime);
+            currentNoteIndex = (currentNoteIndex + 1) % birthdayMelody.length;
+            melodyTimeout = setTimeout(playMelodyLoop, (duration + 0.05) * 1000);
+        }
+
+        function togglePlay() {
+            initAudio();
+            if (!isPlaying) {
+                isPlaying = true;
+                playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                playMelodyLoop();
+            } else {
+                isPlaying = false;
+                playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+                clearTimeout(melodyTimeout);
+            }
+        }
+
+        playBtn.addEventListener('click', togglePlay);
+
+        // Clases de Partículas Estándar
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.012 + 0.012;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.04;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Partículas de Texto ("HAPPY BIRTHDAY")
+        class TextParticle {
+            constructor(x, y, targetX, targetY, color) {
+                this.x = x;
+                this.y = y;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.color = color;
+                this.alpha = 0;
+                this.speed = 0.06;
+                this.life = 1;
+                this.decay = 0.003;
+            }
+            update() {
+                this.x += (this.targetX - this.x) * this.speed;
+                this.y += (this.targetY - this.y) * this.speed;
+                if (this.alpha < 1 && this.life > 0.2) {
+                    this.alpha += 0.05;
+                }
+                this.life -= this.decay;
+                if (this.life <= 0.2) {
+                    this.alpha = this.life / 0.2;
+                }
+            }
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createStandardFirework(x, y) {
+            const colors = ['#ff4f76', '#ff8fa3', '#b5e2fa', '#ffca3a', '#9b5de5', '#00f5d4'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            for (let i = 0; i < 65; i++) {
+                particles.push(new Particle(x, y, randomColor));
+            }
+        }
+
+        function setupTextFirework(text) {
+            textParticles = [];
+            const realCanvas = document.createElement('canvas');
+            const realCtx = realCanvas.getContext('2d');
+            realCanvas.width = canvas.width;
+            realCanvas.height = canvas.height;
+            
+            const fontSize = canvas.width < 500 ? 40 : 65;
+            realCtx.font = `bold ${fontSize}px 'Fredoka One', cursive`;
+            realCtx.fillStyle = 'white';
+            realCtx.textAlign = 'center';
+            realCtx.fillText(text, realCanvas.width / 2, realCanvas.height / 2.5);
+            
+            const imgData = realCtx.getImageData(0, 0, realCanvas.width, realCanvas.height);
+            const colors = ['#ff4f76', '#ffb3c6', '#b5e2fa', '#ffca3a', '#00f5d4'];
+            
+            const step = canvas.width < 500 ? 4 : 5;
+            for (let y = 0; y < realCanvas.height; y += step) {
+                for (let x = 0; x < realCanvas.width; x += step) {
+                    const index = (y * realCanvas.width + x) * 4;
+                    if (imgData.data[index + 3] > 128) {
+                        const startX = realCanvas.width / 2;
+                        const startY = realCanvas.height / 1.2;
+                        const randColor = colors[Math.floor(Math.random() * colors.length)];
+                        textParticles.push(new TextParticle(startX, startY, x, y, randColor));
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            if (animationStage === "mainCard") {
+                ctx.fillStyle = 'rgba(255, 230, 235, 0.25)';
+            } else {
+                ctx.fillStyle = 'rgba(18, 18, 18, 0.25)';
+            }
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            for (let i = textParticles.length - 1; i >= 0; i--) {
+                let tp = textParticles[i];
+                tp.update();
+                tp.draw();
+                if (tp.life <= 0) textParticles.splice(i, 1);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function startBirthdayShow() {
+            introOverlay.style.display = 'none';
+            togglePlay();
+
+            // Pirotecnia continua de fondo durante el texto
+            setTimeout(() => createStandardFirework(canvas.width * 0.2, canvas.height * 0.4), 100);
+            setTimeout(() => createStandardFirework(canvas.width * 0.8, canvas.height * 0.3), 400);
+            setTimeout(() => createStandardFirework(canvas.width * 0.5, canvas.height * 0.2), 800);
+
+            setTimeout(() => {
+                setupTextFirework("HAPPY");
+                createStandardFirework(canvas.width * 0.3, canvas.height * 0.5);
+                createStandardFirework(canvas.width * 0.7, canvas.height * 0.5);
+            }, 1500);
+
+            setTimeout(() => createStandardFirework(canvas.width * 0.15, canvas.height * 0.35), 3000);
+            setTimeout(() => createStandardFirework(canvas.width * 0.85, canvas.height * 0.25), 3600);
+            setTimeout(() => createStandardFirework(canvas.width * 0.4, canvas.height * 0.45), 4200);
+
+            setTimeout(() => {
+                setupTextFirework("BIRTHDAY");
+                createStandardFirework(canvas.width * 0.25, canvas.height * 0.2);
+                createStandardFirework(canvas.width * 0.75, canvas.height * 0.25);
+            }, 4800);
+
+            setTimeout(() => createStandardFirework(canvas.width * 0.3, canvas.height * 0.35), 6500);
+            setTimeout(() => createStandardFirework(canvas.width * 0.7, canvas.height * 0.4), 7200);
+            setTimeout(() => createStandardFirework(canvas.width * 0.5, canvas.height * 0.2), 7800);
+
+            // Activación de la tarjeta y cambio a tu imagen de fondo
+            setTimeout(() => {
+                animationStage = "mainCard";
+                
+                // Activa la clase del body para renderizar la imagen de fondo en la nube
+                document.body.classList.add('tulip-garden');
+                
+                card.classList.add('show');
+                sideGifs.forEach(gif => gif.classList.add('show-gif'));
+                
+                const nameText = "¡Vane!";
+                nameText.split('').forEach((char, index) => {
+                    const span = document.createElement('span');
+                    span.className = 'letter';
+                    span.innerText = char;
+                    span.style.animationDelay = `${index * 0.15}s`;
+                    titleContainer.appendChild(span);
+                    setTimeout(() => span.classList.add('pop'), 50);
+                });
+            }, 8500);
+        }
+
+        introOverlay.addEventListener('click', startBirthdayShow);
+
+        magicBtn.addEventListener('click', () => {
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const randomX = Math.random() * canvas.width;
+                    const randomY = Math.random() * (canvas.height * 0.55);
+                    createStandardFirework(randomX, randomY);
+                }, i * 200);
+            }
+        });
+
+        animate();
+    </script>
+</body>
+</html>
